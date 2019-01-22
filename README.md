@@ -1,4 +1,4 @@
-# docker-c7-systemd
+# docker-c7-j8-apache2
 
 ## Quick Start
 
