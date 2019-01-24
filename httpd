@@ -11,14 +11,14 @@
 ### END INIT INFO
 ## more info: http://wiki.debian.org/LSBInitScripts
 
-PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
-DAEMON=/opt/odoo/openerp-server
-NAME=odoo
-DESC=odoo
-CONFIG=/etc/odoo-server.conf
-LOGFILE=/var/log/odoo/odoo-server.log
+PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin:/usr/local/apache2/bin
+DAEMON=/usr/local/apache2/bin/httpd
+NAME=apache2
+DESC=apache2
+CONFIG=/etc/httpd/conf/httpd.conf
+LOGFILE=/var/log/httpd-server.log
 PIDFILE=/var/run/${NAME}.pid
-USER=odoo
+USER=www
 export LOGNAME=$USER
 
 test -x $DAEMON || exit 0
