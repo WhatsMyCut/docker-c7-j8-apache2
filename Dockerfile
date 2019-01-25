@@ -12,7 +12,7 @@ RUN mkdir /var/www; mkdir /var/www/html; chmod -R 775 /var/www/html;
 RUN chmod +x /usr/local/dev/*.sh
 
 ## additional yum packages
-RUN yum install -y yum-plugin-ovl epel-release initscripts autoconf expat-devel libtool pcre pcre-devel bind bind-utils
+RUN yum -y update; yum install -y yum-plugin-ovl epel-release initscripts autoconf expat-devel libtool pcre pcre-devel bind bind-utils
 RUN yum install -y make vim which
 
 # Install Java 8
@@ -22,8 +22,9 @@ RUN yum -y install nodejs npm ant maven gulp
 
 # Install httpd
 # This does not enable any Apache Modules. Set those using `LoadModule` in the `httpd.conf` file.
-# APR (Apache Portable Runtime) & OpenSSL
+# APR (Apache Portable Runtime), OpenSSL, ufw (Uncomplicated Firewall)
 RUN yum -y install apr apr-devel apr-util apr-util-devel openssl openssl-devel libnghttp2 libnghttp2-devel
+RUN yum -y clean all
 # Install Apache 2
 RUN ["/bin/sh", "-c", "/usr/local/dev/install-httpd-src.sh"]
 # RUN /usr/local/dev/install-httpd-src.sh
