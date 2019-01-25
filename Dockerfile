@@ -12,7 +12,8 @@ RUN mkdir /var/www; mkdir /var/www/html; chmod -R 775 /var/www/html;
 RUN chmod +x /usr/local/dev/*.sh
 
 ## additional yum packages
-RUN yum -y update; yum install -y yum-plugin-ovl epel-release initscripts autoconf expat-devel libtool pcre pcre-devel bind bind-utils
+RUN yum -y update; yum install -y yum-plugin-ovl yum-utils epel-release \
+ initscripts autoconf expat-devel libtool pcre pcre-devel bind bind-utils
 RUN yum install -y make vim which
 
 # Install Java 8
@@ -24,16 +25,19 @@ RUN yum -y install nodejs npm ant maven gulp
 # This does not enable any Apache Modules. Set those using `LoadModule` in the `httpd.conf` file.
 # APR (Apache Portable Runtime), OpenSSL, ufw (Uncomplicated Firewall)
 RUN yum -y install apr apr-devel apr-util apr-util-devel openssl openssl-devel libnghttp2 libnghttp2-devel
-RUN yum -y clean all
+RUN yum -y remove httpd; yum -y clean all
 # Install Apache 2
 RUN ["/bin/sh", "-c", "/usr/local/dev/install-httpd-src.sh"]
 # RUN /usr/local/dev/install-httpd-src.sh
-RUN cp /usr/local/dev/httpd.service /etc/systemd/system/httpd.service; \
-systemctl enable httpd.service; \
-cp /usr/local/dev/httpd.conf /usr/local/apache2/conf/httpd.conf;
+COPY httpd.service /etc/systemd/system/httpd.service
+COPY httpd.conf  /usr/local/apache2/conf/httpd.conf
+RUN systemctl enable httpd.service
+RUN echo "pathmunge /usr/local/apache2/bin" >> /etc/profile.d/httpd.sh; \
+groupadd www; \
+useradd httpd -g www --no-create-home --shell /sbin/nologin;
 
-# TODO: myserver test
-COPY httpd /etc/init.d/
+# Copy the systemd file and set the run levels
+COPY httpd.systemd /etc/init.d/httpd
 RUN find / -name *update*; \
 chkconfig --add httpd;  \
 touch /etc/sysconfig/httpd; chkconfig --level 2345 httpd on; \
@@ -44,10 +48,7 @@ RUN touch /etc/sysconfig/network; chkconfig --level 2345 network on;
 ### named (dns server) service
 RUN systemctl enable named.service
 RUN systemctl mask proc-sys-fs-binfmt_misc.automount;
-RUN echo "<html><body><h1>Apache</h1></body></html>" > /var/www/html/index.php; \
-echo "pathmunge /usr/local/apache2/bin" >> /etc/profile.d/httpd.sh; \
-groupadd www; \
-useradd httpd -g www --no-create-home --shell /sbin/nologin;
+#RUN echo "<html><body><h1>Apache</h1></body></html>" > /var/www/html/index.php;
 RUN chkconfig --list;
 EXPOSE 80 443 9001
 VOLUME ["/sys/fs/cgroup"]
