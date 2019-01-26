@@ -8,7 +8,6 @@ ENV SYSTEMD_IGNORE_CHROOT=true
 ENV init /lib/systemd/systemd
 ENV HOSTNAME=localhost
 ADD . /usr/local/dev
-RUN mkdir /var/www; mkdir /var/www/html; chmod -R 775 /var/www/html;
 RUN chmod +x /usr/local/dev/*.sh
 
 ## additional yum packages
@@ -28,29 +27,31 @@ RUN yum -y install apr apr-devel apr-util apr-util-devel openssl openssl-devel l
 RUN yum -y remove httpd; yum -y clean all
 # Install Apache 2
 RUN ["/bin/sh", "-c", "/usr/local/dev/install-httpd-src.sh"]
-# RUN /usr/local/dev/install-httpd-src.sh
 COPY httpd.service /etc/systemd/system/httpd.service
-COPY httpd.conf  /usr/local/apache2/conf/httpd.conf
+COPY httpd-default.conf  /usr/local/apache2/conf/httpd.conf
+COPY httpd-vhosts.conf /usr/local/apache2/conf/extra/httpd-vhosts.conf
 RUN systemctl enable httpd.service
 RUN echo "pathmunge /usr/local/apache2/bin" >> /etc/profile.d/httpd.sh; \
 groupadd www; \
 useradd httpd -g www --no-create-home --shell /sbin/nologin;
+RUN mkdir /usr/local/apache2/htdocs/vhosts/; mkdir /usr/local/apache2/htdocs/vhosts/localhost; \
+mkdir /usr/local/apache2/htdocs/vhosts/localhost/logs/; chmod -R 775 /usr/local/apache2/htdocs/vhosts/
 
 # Copy the systemd file and set the run levels
-COPY httpd.systemd /etc/init.d/httpd
-RUN find / -name *update*; \
-chkconfig --add httpd;  \
-touch /etc/sysconfig/httpd; chkconfig --level 2345 httpd on; \
-sysctl -p -a;
+# COPY httpd.systemd /etc/init.d/httpd
+# RUN find / -name *update*; \
+# chkconfig --add httpd;  \
+# touch /etc/sysconfig/httpd; chkconfig --level 2345 httpd on; \
+# sysctl -p -a;
 
 # Enable services
 RUN touch /etc/sysconfig/network; chkconfig --level 2345 network on;
 ### named (dns server) service
 RUN systemctl enable named.service
 RUN systemctl mask proc-sys-fs-binfmt_misc.automount;
-#RUN echo "<html><body><h1>Apache</h1></body></html>" > /var/www/html/index.php;
+RUN echo "<html><body><h1>Apache</h1></body></html>" > /usr/local/apache2/htdocs/vhosts/localhost/index.html;
 RUN chkconfig --list;
 EXPOSE 80 443 9001
 VOLUME ["/sys/fs/cgroup"]
-ENTRYPOINT [ "/usr/local/dev/docker-entrypoint.sh -c /bin/bash" ]
-CMD ["systemctl", "restart", "autofs"]
+ENTRYPOINT [ "/usr/local/dev/docker-entrypoint.sh" ]
+CMD ["/usr/sbin/init"]
