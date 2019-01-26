@@ -4,14 +4,14 @@ if [ "$#" -gt 1 ] && [ "$1" = /bin/sh ] && [ x"$2" = x"-c" ]; then
   eval "shift 2; set -- $1"
 fi
 # Exit on errors
-set -e
+#set -e
 # Uncomment to set the root password to login for runtime debugging.
-passwd root
+#passwd root
 # Display chkconfig info
 chkconfig --list
 exec /usr/sbin/init
 systemctl list-unit-files > /usr/local/tmp/unit-files.rpt
 systemctl restart autofs
-systemctl restart httpd
+apachectl restart httpd
 # run the command given as arguments from CMD
 eval "$@"

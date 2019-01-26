@@ -1,12 +1,12 @@
 FROM whatsmycut/c7-systemd:latest
 LABEL maintainer="mike@whatsmycut.com"
 LABEL imagename=whatsmycut/docker-c7-systemd-j8-apache2:latest
+LABEL hostname=localhost
 # undocumented requirement for docker containers
 ENV container=docker
 # systemd init variables
 ENV SYSTEMD_IGNORE_CHROOT=true
 ENV init /lib/systemd/systemd
-ENV HOSTNAME=localhost
 ADD . /usr/local/dev
 RUN chmod +x /usr/local/dev/*.sh
 
@@ -34,8 +34,11 @@ RUN systemctl enable httpd.service
 RUN echo "pathmunge /usr/local/apache2/bin" >> /etc/profile.d/httpd.sh; \
 groupadd www; \
 useradd httpd -g www --no-create-home --shell /sbin/nologin;
-RUN mkdir /usr/local/apache2/htdocs/vhosts/; mkdir /usr/local/apache2/htdocs/vhosts/localhost; \
-mkdir /usr/local/apache2/htdocs/vhosts/localhost/logs/; chmod -R 775 /usr/local/apache2/htdocs/vhosts/
+RUN mkdir /usr/local/apache2/htdocs/logs/; \
+mkdir /usr/local/apache2/htdocs/vhosts/; \
+mkdir /usr/local/apache2/htdocs/vhosts/localhost; \
+mkdir /usr/local/apache2/htdocs/vhosts/localhost/logs/; \
+chmod -R 775 /usr/local/apache2/htdocs/
 
 # Copy the systemd file and set the run levels
 # COPY httpd.systemd /etc/init.d/httpd
@@ -51,7 +54,7 @@ RUN systemctl enable named.service
 RUN systemctl mask proc-sys-fs-binfmt_misc.automount;
 RUN echo "<html><body><h1>Apache</h1></body></html>" > /usr/local/apache2/htdocs/vhosts/localhost/index.html;
 RUN chkconfig --list;
-EXPOSE 80 443 9001
+#EXPOSE 80 443 8080 9001
 VOLUME ["/sys/fs/cgroup"]
-ENTRYPOINT [ "/usr/local/dev/docker-entrypoint.sh" ]
+ENTRYPOINT [ "/usr/local/dev/docker-entrypoint.sh", "/bin/sh", "-c", "-e [/bin/bash || /bin/sh]" ]
 CMD ["/usr/sbin/init"]
